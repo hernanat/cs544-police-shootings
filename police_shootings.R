@@ -1,6 +1,14 @@
 
 # set your wd
 setwd("/Users/hernanat/school/summer/data-analytics/project")
+
+# if you install R using homebrew / using a package manager (like you SHOULD!!!!), Jupyter and R Studio sometimes
+# throw a fit about packages not being where it thinks they should be :facepalm:
+.libPaths( c( .libPaths(), "/usr/local/lib/R/3.5/site-library", "/usr/local/Cellar/r/3.5.0_1/lib/R/library" ) )
+
+library(prob)
+library(sampling)
+
 # police shootings 2015-2018
 # https://github.com/washingtonpost/data-police-shootings
 shooting_data <<- read.csv('fatal-police-shootings-data.csv', header = TRUE, na.strings = c("", "NA"), stringsAsFactors = FALSE)
@@ -97,6 +105,106 @@ boxPlots('M')
 # all race-age summaries by gender - female
 allAgeSummaries(genderCode = 'F')
 boxPlots('F')
+
+# Histogram of age distribution overall
+mf_overall_age_distribution = age_known$age
+
+hist(
+    mf_overall_age_distribution,
+    main = "Frequency of Age - Overall",
+    xlab = "Age",
+    breaks = length(unique(mf_overall_age_distribution)),
+    col = 'cyan',
+    ylim = c(0, 200),
+    xlim = c(0, 100)
+)
+
+# Histogram of age distribution - black
+mf_b_age_distribution = subset(age_known, race == 'B')$age
+
+hist(
+    mf_b_age_distribution,
+    main = "Frequency of Age - Black",
+    xlab = "Age",
+    breaks = length(unique(mf_b_age_distribution)),
+    col = 'cyan',
+    ylim = c(0, 75),
+    xlim = c(0, 90)
+)
+
+# Histogram of age distribution - hispanic
+mf_h_age_distribution = subset(age_known, race == 'H')$age
+
+hist(
+    mf_h_age_distribution,
+    main = "Frequency of Age - Hispanic",
+    xlab = "Age",
+    breaks = length(unique(mf_h_age_distribution)),
+    col = 'cyan',
+    ylim = c(0, 35),
+    xlim = c(0, 100)
+)
+
+# Histogram of age distribution - white
+mf_w_age_distribution = subset(age_known, race == 'W')$age
+hist(
+    mf_w_age_distribution,
+    main = "Frequency of Age - White",
+    xlab = "Age",
+    breaks = length(unique(mf_w_age_distribution)),
+    col = 'cyan',
+    ylim = c(0, 75),
+    xlim = c(0, 100)
+)
+
+# Systematic samples of overall age / race distribution
+set.seed(1337) # way 2 1337
+N = length(mf_overall_age_distribution) # data size
+n = 300 # sample size
+k <- floor(N/n) # items in each group
+r <- sample(k, 1)
+s <- seq(r, by = k, length = n)
+
+systematic_sample = mf_overall_age_distribution[s]
+systematic_sample_mean = mean(systematic_sample)
+systematic_sample_mean
+
+# Histogram of age distribution - systematic sample
+hist(
+    mf_w_age_distribution,
+    main = "Frequency of Age - Systematic Sample",
+    xlab = "Age",
+    breaks = length(unique(systematic_sample)),
+    col = 'cyan',
+    ylim = c(0, 150),
+    xlim = c(0, 100)
+)
+
+
+
+# Stratified sampling of overall age / race distribution
+set.seed(7281994) # happy birthday to me
+strata_subset = subset(age_known, !is.na(race) & race %in% c('B', 'H', 'W'))
+stratified_data = data.frame(Age = strata_subset$age, Race = strata_subset$race)
+freq = table(stratified_data$Race)
+st.sizes = 300 * freq / sum(freq)
+st_overall = strata(stratified_data, stratanames = c("Race"),
+               size = st.sizes,
+               description = TRUE)
+
+strata_age_dist = strata_subset[st_overall$ID_unit,]$age
+strata_sample_mean = mean(strata_age_dist)
+strata_sample_mean
+
+hist(
+    strata_age_dist,
+    main = "Frequency of Age - Stratified Sample",
+    xlab = "Age",
+    breaks = length(strata_age_dist),
+    col = 'blue',
+    ylim = c(0, 20),
+    xlim = c(0, 80)
+)
 
 # 2010 census data
 # will use for exploring shootings proportional to total population number

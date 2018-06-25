@@ -1,6 +1,0 @@
-- national, state, county (overall)
-	- age, sex, race of deceased
-
-- demographic analysis
-	- deaths in areas where a particular demographic is / is not the majority
-		- i.e. are black people still more likely to be killed by police in white-majority areas
