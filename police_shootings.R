@@ -2,7 +2,8 @@
 # set your wd
 setwd("/Users/hernanat/school/summer/data-analytics/project")
 # police shootings 2015-2018
-shooting_data <<- read.csv('fatal-police-shootings-data.csv', header = TRUE, na.strings = c("", "NA"))
+# https://github.com/washingtonpost/data-police-shootings
+shooting_data <<- read.csv('fatal-police-shootings-data.csv', header = TRUE, na.strings = c("", "NA"), stringsAsFactors = FALSE)
 
 # census data and estimates
 # https://factfinder.census.gov/bkmk/table/1.0/en/PEP/2017/PEPASR6H?slice=hisp~totpop
@@ -228,3 +229,56 @@ mf_shootings_to_pop_black/ mf_shootings_to_pop_white
 
 # hispanic / white ratio
 mf_shootings_to_pop_hispanic / mf_shootings_to_pop_white
+
+# WaPo race codes; see the dataset link
+wapo_codes = c('B', 'H', 'W')
+race_labels = c('Black', 'Hispanic', 'White')
+armed_table = table(subset(shooting_data, armed != 'unarmed' & armed != 'undetermined')$race)[wapo_codes]
+unarmed_table = table(subset(shooting_data, armed == 'unarmed')$race)[wapo_codes]
+
+armed_table
+unarmed_table
+
+armed_unarmed_matrix = matrix(c(armed_table, unarmed_table), ncol=2)
+colnames(armed_unarmed_matrix) <- c('Armed', 'Unarmed')
+rownames(armed_unarmed_matrix) <- race_labels
+
+armed_unarmed_matrix
+
+mosaicplot(armed_unarmed_matrix, main = 'Armed vs Unarmed by Race Group', col=c('cyan', 'blue'))
+
+fleeing_table = table(subset(shooting_data, flee != 'Not fleeing')$race)[wapo_codes]
+not_fleeing_table = table(subset(shooting_data, flee == 'Not fleeing')$race)[wapo_codes]
+
+fleeing_table
+not_fleeing_table
+
+fleeing_not_fleeing_matrix = matrix(c(fleeing_table, not_fleeing_table), ncol=2)
+colnames(fleeing_not_fleeing_matrix) <- c('Fleeing', 'Not Fleeing')
+rownames(fleeing_not_fleeing_matrix) <- race_labels
+
+fleeing_not_fleeing_matrix
+
+mosaicplot(fleeing_not_fleeing_matrix, main = 'Fleeing vs Not Fleeing by Race Group', col=c('red', 'orange', 'green'))
+
+fields = c('race', 'armed', 'flee')
+armed_fleeing_data = subset(shooting_data, race %in% wapo_codes & armed != 'unarmed' & armed != 'undetermined' & flee != 'Not fleeing')[fields]
+armed_not_fleeing_data = subset(shooting_data, race %in% wapo_codes & armed != 'unarmed' & armed != 'undetermined' & flee == 'Not fleeing')[fields]
+unarmed_fleeing_data = subset(shooting_data, race %in% wapo_codes & armed == 'unarmed' & flee != 'Not fleeing')[fields]
+unarmed_not_fleeing_data = subset(shooting_data, race %in% wapo_codes & armed == 'unarmed' & flee == 'Not fleeing')[fields]
+
+armed_fleeing_data$armed = c('armed')
+armed_fleeing_data$flee = c('fleeing')
+armed_not_fleeing_data$armed = c('armed')
+
+unarmed_fleeing_data$flee = c('fleeing')
+
+
+dataForPlot = rbind(armed_fleeing_data, armed_not_fleeing_data, unarmed_fleeing_data, unarmed_not_fleeing_data)
+names(dataForPlot) <- c('Race', 'Armed', 'Fleeing')
+mosaicplot(
+    ~ Fleeing + Race + Armed,
+    dataForPlot,
+    main = "Race, Fleeing / Unfleeing, Armed / Unarmed",
+    col = c('red', 'orange', 'green')
+)
